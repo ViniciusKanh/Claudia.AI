@@ -19,3 +19,5 @@ build/
 # Outros
 *.sqlite3
 *.DS_Store
+
+documents/
