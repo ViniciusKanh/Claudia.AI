@@ -95,11 +95,18 @@ class AIService:
         """Configura modelo Llama local"""
         try:
             from llama_cpp import Llama
-            
-            model_path = os.getenv('LLAMA_MODEL_PATH', './models/llama-2-7b-chat')
+
+            # Permite configurar caminho e nome do modelo via variáveis de ambiente
+            self.model_name = os.getenv(
+                'LLAMA_MODEL_NAME', 'llama-3.3-70b-instruct'
+            )
+            model_path = os.getenv(
+                'LLAMA_MODEL_PATH', './models/llama-3.3-70b-instruct'
+            )
+
             if not os.path.exists(model_path):
                 raise FileNotFoundError(f"Modelo não encontrado: {model_path}")
-            
+
             self.model = Llama(
                 model_path=model_path,
                 n_ctx=2048,
@@ -107,7 +114,9 @@ class AIService:
                 verbose=False
             )
             self.is_initialized = True
-            logger.info("Modelo Llama carregado com sucesso")
+            logger.info(
+                f"Modelo Llama carregado com sucesso: {self.model_name}"
+            )
         except ImportError:
             logger.error("Biblioteca llama-cpp-python não instalada")
             raise
@@ -211,24 +220,46 @@ class AIService:
     def _generate_llama_response(self, message, context=None):
         """Gera resposta usando Llama"""
         try:
-            # Preparar prompt
-            if context:
-                prompt = f"<s>[INST] {context}\n\n{message} [/INST]"
-            else:
-                prompt = f"<s>[INST] {message} [/INST]"
-            
+            def build_prompt(msg, ctx):
+                """Constrói prompt no formato Llama 3.x"""
+                prompt = (
+                    "<|begin_of_text|>"
+                    "<|start_header_id|>system<|end_header_id|>\n"
+                    "Você é Claudia, uma assistente IA amigável, prestativa e inteligente. Responda sempre em português de forma natural e conversacional."
+                    "<|eot_id|>"
+                )
+                if ctx and isinstance(ctx, list):
+                    for item in ctx:
+                        role = item.get('role', 'user')
+                        content = item.get('content', '')
+                        prompt += (
+                            f"<|start_header_id|>{role}<|end_header_id|>\n"
+                            f"{content}<|eot_id|>"
+                        )
+                prompt += (
+                    "<|start_header_id|>user<|end_header_id|>\n"
+                    f"{msg}<|eot_id|>"
+                    "<|start_header_id|>assistant<|end_header_id|>\n"
+                )
+                return prompt
+
+            prompt = build_prompt(message, context)
+
             response = self.model(
                 prompt,
                 max_tokens=500,
                 temperature=0.7,
                 top_p=0.9,
+                stop=["<|eot_id|>"],
                 echo=False
             )
-            
+
+            text = response['choices'][0]['text'].strip()
+
             return {
-                'response': response['choices'][0]['text'].strip(),
-                'tokens': len(response['choices'][0]['text'].split()),
-                'model': 'llama-local',
+                'response': text,
+                'tokens': len(text.split()),
+                'model': self.model_name,
                 'timestamp': datetime.utcnow().isoformat(),
                 'status': 'success'
             }

@@ -4,12 +4,13 @@ import { ScrollArea } from './ui/scroll-area'
 import { Textarea } from './ui/textarea'
 import { Badge } from './ui/badge'
 
-const Chat = ({ 
-  conversation, 
-  messages, 
-  onSendMessage, 
-  isLoading, 
-  aiStatus 
+const Chat = ({
+  conversation,
+  messages,
+  onSendMessage,
+  isLoading,
+  aiStatus,
+  modelInfo
 }) => {
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -174,6 +175,11 @@ const Chat = ({
               {aiStatus === 'demo' && (
                 <Badge variant="warning" className="mt-4">
                   Modo Demonstração Ativo
+                </Badge>
+              )}
+              {aiStatus !== 'demo' && modelInfo?.model_name && (
+                <Badge variant="secondary" className="mt-4">
+                  {modelInfo.model_name}
                 </Badge>
               )}
             </div>

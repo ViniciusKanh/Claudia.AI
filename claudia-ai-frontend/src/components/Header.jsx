@@ -1,7 +1,7 @@
 import { Menu, Bot, Wifi, WifiOff, AlertCircle } from 'lucide-react'
 import { Badge } from './ui/badge'
 
-const Header = ({ onToggleSidebar, aiStatus }) => {
+const Header = ({ onToggleSidebar, aiStatus, modelInfo }) => {
   const getStatusInfo = (status) => {
     switch (status) {
       case 'online':
@@ -58,7 +58,7 @@ const Header = ({ onToggleSidebar, aiStatus }) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Badge 
+          <Badge
             variant={statusInfo.variant}
             size="sm"
             className="flex items-center space-x-1 bg-white/10 border-white/20 text-white"
@@ -66,7 +66,17 @@ const Header = ({ onToggleSidebar, aiStatus }) => {
             {statusInfo.icon}
             <span>{statusInfo.text}</span>
           </Badge>
-          
+
+          {modelInfo?.model_name && (
+            <Badge
+              variant="secondary"
+              size="sm"
+              className="hidden sm:inline-flex bg-white/10 border-white/20 text-white"
+            >
+              {modelInfo.model_name}
+            </Badge>
+          )}
+
           <div className="hidden md:flex items-center space-x-2 text-sm text-primary-200">
             <span>v1.0.0</span>
           </div>
