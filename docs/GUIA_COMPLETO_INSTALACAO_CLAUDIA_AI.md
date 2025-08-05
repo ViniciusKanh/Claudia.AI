@@ -441,19 +441,19 @@ SECRET_KEY=chave-super-secreta # Chave de segurança forte
 **Configurações de IA:**
 ```bash
 # Modo de operação da IA
-AI_MODE=demo                  # demo, openai, huggingface, local
+AI_MODEL_TYPE=demo                # demo, openai, huggingface, llama
 
 # Configurações OpenAI
-OPENAI_API_KEY=sk-...         # Sua chave da OpenAI
-OPENAI_MODEL=gpt-3.5-turbo    # Modelo a usar
+OPENAI_API_KEY=sk-...             # Sua chave da OpenAI
+OPENAI_MODEL=gpt-3.5-turbo        # Modelo a usar
 
 # Configurações Hugging Face
-HUGGINGFACE_API_KEY=hf_...    # Sua chave do HF
+HUGGINGFACE_API_KEY=hf_...        # Sua chave do HF
 HUGGINGFACE_MODEL=microsoft/DialoGPT-large
 
-# Configurações para modelo local
-LOCAL_MODEL_PATH=/path/to/model
-LOCAL_MODEL_TYPE=llama        # llama, falcon, etc
+# Configurações para modelo Llama local
+AI_MODEL_NAME=Llama3.3-70B-Instruct
+LLAMA_MODEL_PATH=/path/to/model
 ```
 
 **Configurações de Banco:**
@@ -859,8 +859,8 @@ curl https://api-inference.huggingface.co/models/microsoft/DialoGPT-large \
 **Modo demo não funciona**
 ```bash
 # Verificar configuração
-grep AI_MODE claudia-ai-backend/.env
-# Deve ser: AI_MODE=demo
+grep AI_MODEL_TYPE claudia-ai-backend/.env
+# Deve ser: AI_MODEL_TYPE=demo
 
 # Reiniciar backend
 pkill -f python

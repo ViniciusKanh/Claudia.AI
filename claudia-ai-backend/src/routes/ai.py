@@ -155,9 +155,9 @@ def get_available_models():
                 },
                 {
                     'type': 'llama',
-                    'name': 'Llama Local',
-                    'description': 'Modelos Llama executados localmente',
-                    'requirements': 'llama-cpp-python, modelo baixado'
+                    'name': 'Llama 3.3 70B Instruct',
+                    'description': 'Modelo Llama 3.3 executado localmente',
+                    'requirements': 'llama-cpp-python, modelo 3.3 baixado'
                 }
             ]
         }
@@ -176,7 +176,7 @@ def get_ai_config():
             'model_name': os.getenv('AI_MODEL_NAME', 'demo'),
             'openai_configured': bool(os.getenv('OPENAI_API_KEY')),
             'hf_model': os.getenv('HF_MODEL_NAME', 'microsoft/DialoGPT-medium'),
-            'llama_path': os.getenv('LLAMA_MODEL_PATH', './models/llama-2-7b-chat'),
+            'llama_path': os.getenv('LLAMA_MODEL_PATH', './models/llama-3.3-70b-instruct'),
             'status': ai_service.get_model_info()
         }
         return jsonify(config), 200

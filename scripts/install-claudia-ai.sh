@@ -276,7 +276,12 @@ SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')
 DATABASE_URL=sqlite:///src/database/app.db
 
 # Configurações da IA (opcional - modo demo por padrão)
-AI_MODE=demo
+AI_MODEL_TYPE=demo
+AI_MODEL_NAME=demo
+# Para usar Llama localmente, descomente as linhas abaixo
+# AI_MODEL_TYPE=llama
+# AI_MODEL_NAME=Llama3.3-70B-Instruct
+# LLAMA_MODEL_PATH=./src/models/Llama3.3-70B-Instruct
 # OPENAI_API_KEY=sua-chave-openai-aqui
 # HUGGINGFACE_API_KEY=sua-chave-huggingface-aqui
 
