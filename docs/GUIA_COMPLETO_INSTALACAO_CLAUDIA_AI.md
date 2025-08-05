@@ -441,7 +441,8 @@ SECRET_KEY=chave-super-secreta # Chave de segurança forte
 **Configurações de IA:**
 ```bash
 # Modo de operação da IA
-AI_MODE=demo                  # demo, openai, huggingface, local
+AI_MODEL_TYPE=demo            # demo, openai, huggingface, local
+# AI_MODE também é aceito para compatibilidade
 
 # Configurações OpenAI
 OPENAI_API_KEY=sk-...         # Sua chave da OpenAI
@@ -859,8 +860,8 @@ curl https://api-inference.huggingface.co/models/microsoft/DialoGPT-large \
 **Modo demo não funciona**
 ```bash
 # Verificar configuração
-grep AI_MODE claudia-ai-backend/.env
-# Deve ser: AI_MODE=demo
+grep AI_MODEL_TYPE claudia-ai-backend/.env
+# Deve ser: AI_MODEL_TYPE=demo (AI_MODE também aceito)
 
 # Reiniciar backend
 pkill -f python

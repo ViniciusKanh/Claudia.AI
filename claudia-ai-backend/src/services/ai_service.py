@@ -7,7 +7,9 @@ logger = logging.getLogger(__name__)
 
 class AIService:
     def __init__(self):
-        self.model_type = os.getenv('AI_MODEL_TYPE', 'demo')
+        # AI_MODEL_TYPE é a variável principal. AI_MODE é mantida por
+        # compatibilidade retroativa.
+        self.model_type = os.getenv('AI_MODEL_TYPE') or os.getenv('AI_MODE', 'demo')
         self.model_name = os.getenv('AI_MODEL_NAME', 'demo')
         self.model = None
         self.tokenizer = None
