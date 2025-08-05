@@ -136,7 +136,9 @@ GET /api/info            # Informações da API
 FLASK_ENV=development
 SECRET_KEY=chave-secreta
 DATABASE_URL=sqlite:///src/database/app.db
-AI_MODE=demo
+AI_MODEL_TYPE=demo
+AI_MODEL_NAME=demo
+# LLAMA_MODEL_PATH=./src/models/Llama3.3-70B-Instruct
 OPENAI_API_KEY=opcional
 HUGGINGFACE_API_KEY=opcional
 ```

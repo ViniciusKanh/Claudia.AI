@@ -42,7 +42,7 @@ def create_app():
     # Configuração CORS
     cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5173').split(',')
     CORS(app, resources={
-        r"/api/*": {
+        r"/*": {
             "origins": cors_origins,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
@@ -56,6 +56,11 @@ def create_app():
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(conversation_bp, url_prefix='/api')
     app.register_blueprint(ai_bp, url_prefix='/api')
+
+    # Rotas sem prefixo /api para compatibilidade
+    app.register_blueprint(user_bp, name='user_noapi')
+    app.register_blueprint(conversation_bp, name='conversation_noapi')
+    app.register_blueprint(ai_bp, name='ai_noapi')
     
     # Rotas principais
     @app.route('/')

@@ -12,6 +12,7 @@ function App() {
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [aiStatus, setAiStatus] = useState('connecting')
+  const [modelInfo, setModelInfo] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
 
   // Verificar status da IA e criar usuário padrão
@@ -26,7 +27,8 @@ function App() {
       const response = await fetch(`${API_URL}/ai/status`)
       if (response.ok) {
         const data = await response.json()
-        setAiStatus(data.status === 'online' ? 'online' : 'demo')
+        setAiStatus(data.model_type === 'demo' ? 'demo' : data.status)
+        setModelInfo(data)
       } else {
         setAiStatus('offline')
       }
@@ -261,6 +263,7 @@ function App() {
         <Header
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           aiStatus={aiStatus}
+          modelInfo={modelInfo}
         />
         
         <main className="flex-1 overflow-hidden">
@@ -270,6 +273,7 @@ function App() {
             onSendMessage={sendMessage}
             isLoading={isLoading}
             aiStatus={aiStatus}
+            modelInfo={modelInfo}
           />
         </main>
       </div>
