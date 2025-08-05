@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
 """
-Arquivo principal para deploy da Claudia.AI
+Ponto de entrada para deploy da Claudia.AI
+Este arquivo é usado por serviços de deploy como Gunicorn, uWSGI, etc.
 """
 
-import os
-import sys
+from src.main import create_app
 
-# Adiciona o diretório src ao path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
-
-# Importa a aplicação Flask
-from src.main import app
+# Criar instância da aplicação
+app = create_app()
 
 if __name__ == '__main__':
     # Para desenvolvimento local
-    app.run(host='0.0.0.0', port=5000, debug=False)
-else:
-    # Para deploy em produção
-    application = app
+    app.run(host='0.0.0.0', port=5000, debug=True)
 
