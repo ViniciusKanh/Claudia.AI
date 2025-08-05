@@ -136,7 +136,7 @@ GET /api/info            # Informações da API
 FLASK_ENV=development
 SECRET_KEY=chave-secreta
 DATABASE_URL=sqlite:///src/database/app.db
-AI_MODE=demo
+AI_MODEL_TYPE=demo  # ou AI_MODE=demo
 OPENAI_API_KEY=opcional
 HUGGINGFACE_API_KEY=opcional
 ```

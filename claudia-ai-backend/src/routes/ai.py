@@ -171,8 +171,10 @@ def get_ai_config():
     """Retorna configuração atual da IA"""
     try:
         import os
+        # AI_MODEL_TYPE é preferencial. AI_MODE permanece por compatibilidade.
+        model_type = os.getenv('AI_MODEL_TYPE') or os.getenv('AI_MODE', 'demo')
         config = {
-            'model_type': os.getenv('AI_MODEL_TYPE', 'demo'),
+            'model_type': model_type,
             'model_name': os.getenv('AI_MODEL_NAME', 'demo'),
             'openai_configured': bool(os.getenv('OPENAI_API_KEY')),
             'hf_model': os.getenv('HF_MODEL_NAME', 'microsoft/DialoGPT-medium'),

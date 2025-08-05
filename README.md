@@ -131,18 +131,18 @@ npm run dev  # ou pnpm run dev
 **Modo Demo (Padrão):**
 ```bash
 # No arquivo claudia-ai-backend/.env
-AI_MODE=demo
+AI_MODEL_TYPE=demo  # ou AI_MODE=demo
 ```
 
 **OpenAI:**
 ```bash
-AI_MODE=openai
+AI_MODEL_TYPE=openai  # ou AI_MODE=openai
 OPENAI_API_KEY=sua-chave-aqui
 ```
 
 **Hugging Face:**
 ```bash
-AI_MODE=huggingface
+AI_MODEL_TYPE=huggingface  # ou AI_MODE=huggingface
 HUGGINGFACE_API_KEY=sua-chave-aqui
 ```
 
@@ -189,7 +189,7 @@ cd claudia-ai-frontend && npm run build
 FLASK_ENV=development
 SECRET_KEY=sua-chave-secreta
 DATABASE_URL=sqlite:///src/database/app.db
-AI_MODE=demo
+AI_MODEL_TYPE=demo  # ou AI_MODE=demo
 OPENAI_API_KEY=opcional
 HUGGINGFACE_API_KEY=opcional
 ```

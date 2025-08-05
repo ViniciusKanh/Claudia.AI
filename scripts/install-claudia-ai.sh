@@ -276,7 +276,8 @@ SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')
 DATABASE_URL=sqlite:///src/database/app.db
 
 # Configurações da IA (opcional - modo demo por padrão)
-AI_MODE=demo
+AI_MODEL_TYPE=demo
+# AI_MODE=demo  # legado compatível
 # OPENAI_API_KEY=sua-chave-openai-aqui
 # HUGGINGFACE_API_KEY=sua-chave-huggingface-aqui
 
