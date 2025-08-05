@@ -71,11 +71,19 @@ class AIService:
         try:
             from transformers import AutoTokenizer, AutoModelForCausalLM
             import torch
-            
+
             model_name = os.getenv('HF_MODEL_NAME', 'microsoft/DialoGPT-medium')
-            
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self.model = AutoModelForCausalLM.from_pretrained(model_name)
+
+            hf_token = os.getenv('HUGGINGFACE_API_KEY')
+
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model_name,
+                use_auth_token=hf_token
+            )
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                use_auth_token=hf_token
+            )
             
             # Configurar para GPU se disponível
             if torch.cuda.is_available():

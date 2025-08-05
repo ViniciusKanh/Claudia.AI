@@ -146,6 +146,8 @@ AI_MODE=huggingface
 HUGGINGFACE_API_KEY=sua-chave-aqui
 ```
 
+> O token definido em `HUGGINGFACE_API_KEY` é necessário para carregar modelos privados do Hugging Face.
+
 ## 🛠️ Desenvolvimento
 
 ### Comandos Úteis
@@ -191,7 +193,7 @@ SECRET_KEY=sua-chave-secreta
 DATABASE_URL=sqlite:///src/database/app.db
 AI_MODE=demo
 OPENAI_API_KEY=opcional
-HUGGINGFACE_API_KEY=opcional
+HUGGINGFACE_API_KEY=opcional # necessário para modelos privados do Hugging Face
 ```
 
 **Frontend (.env):**
