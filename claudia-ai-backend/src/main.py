@@ -1,156 +1,188 @@
 import os
-import sys
-# DON'T CHANGE THIS !!!
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-from flask import Flask, send_from_directory, jsonify, request
+from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
+from dotenv import load_dotenv
+from datetime import datetime
+import logging
+from sqlalchemy import text
+# Carregar variáveis de ambiente
+load_dotenv()
+
+# Importar modelos e rotas
 from src.models.user import db
-from src.models.conversation import Conversation, Message, Feedback, SystemConfig
 from src.routes.user import user_bp
 from src.routes.conversation import conversation_bp
 from src.routes.ai import ai_bp
-from src.routes.learning import learning_bp
-from src.services.ai_service import initialize_ai_service
-from src.services.learning_service import initialize_learning_service
-from datetime import datetime
-import logging
 
 # Configuração de logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO')),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
 )
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-
-# Configurações da aplicação
-app.config['SECRET_KEY'] = 'claudia-ai-secret-key-2025'
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Configuração CORS para permitir requisições do frontend
-CORS(app, resources={
-    r"/api/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
-
-# Registra blueprints
-app.register_blueprint(user_bp, url_prefix='/api')
-app.register_blueprint(conversation_bp, url_prefix='/api')
-app.register_blueprint(ai_bp, url_prefix='/api')
-app.register_blueprint(learning_bp, url_prefix='/api')
-
-# Inicializa banco de dados
-db.init_app(app)
-with app.app_context():
-    db.create_all()
-    logger.info("Banco de dados inicializado")
+def create_app():
+    """Factory function para criar a aplicação Flask"""
+    app = Flask(__name__, static_folder='static', static_url_path='')
     
-    # Configura dados iniciais se necessário
-    if not SystemConfig.query.filter_by(key='app_version').first():
-        SystemConfig.set_config('app_version', '1.0.0', 'Versão da aplicação Claudia.AI')
-        SystemConfig.set_config('ai_model', 'Llama 3.1 70B', 'Modelo de IA utilizado')
-        SystemConfig.set_config('max_conversations_per_user', '100', 'Máximo de conversas por usuário')
-        logger.info("Configurações iniciais criadas")
-
-# Inicializa serviço de IA
-initialize_ai_service()
-
-# Inicializa serviço de aprendizado
-initialize_learning_service()
-
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    """Serve arquivos estáticos do frontend"""
-    static_folder_path = app.static_folder
-    if static_folder_path is None:
-        return "Static folder not configured", 404
-
-    if path != "" and os.path.exists(os.path.join(static_folder_path, path)):
-        return send_from_directory(static_folder_path, path)
-    else:
-        index_path = os.path.join(static_folder_path, 'index.html')
-        if os.path.exists(index_path):
-            return send_from_directory(static_folder_path, 'index.html')
-        else:
-            return "index.html not found", 404
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    try:
-        # Verifica conexão com banco de dados
-        db.session.execute(db.text('SELECT 1'))
-        
-        # Verifica status do serviço de IA
-        from src.services.ai_service import ai_service
-        ai_status = ai_service.get_model_info()
-        
-        return jsonify({
-            'status': 'healthy',
-            'database': 'connected',
-            'ai_service': 'online' if ai_status['is_loaded'] else 'demo_mode',
-            'version': SystemConfig.get_config('app_version', '1.0.0'),
-            'timestamp': datetime.utcnow().isoformat()
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        return jsonify({
-            'status': 'unhealthy',
-            'error': str(e)
-        }), 500
-
-@app.route('/api/info', methods=['GET'])
-def app_info():
-    """Informações da aplicação"""
-    return jsonify({
-        'name': 'Claudia.AI Backend',
-        'version': SystemConfig.get_config('app_version', '1.0.0'),
-        'description': 'Backend da IA conversacional Claudia.AI baseada em Llama 3.1 70B',
-        'ai_model': SystemConfig.get_config('ai_model', 'Llama 3.1 70B'),
-        'features': [
-            'Conversas inteligentes',
-            'Aprendizado contínuo',
-            'Feedback de usuários',
-            'Streaming de respostas',
-            'Suporte ao português'
-        ],
-        'endpoints': {
-            'conversations': '/api/conversations',
-            'ai': '/api/ai',
-            'users': '/api/users',
-            'learning': '/api/learning',
-            'health': '/api/health'
+    # Configurações da aplicação
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-claudia-ai')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///src/database/app.db')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_timeout': 20,
+        'pool_recycle': -1,
+        'pool_pre_ping': True
+    }
+    
+    # Configuração CORS
+    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5173').split(',')
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": cors_origins,
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
         }
-    }), 200
+    })
+    
+    # Inicialização do banco de dados
+    db.init_app(app)
+    
+    # Registro de blueprints
+    app.register_blueprint(user_bp, url_prefix='/api')
+    app.register_blueprint(conversation_bp, url_prefix='/api')
+    app.register_blueprint(ai_bp, url_prefix='/api')
+    
+    # Rotas principais
+    @app.route('/')
+    def index():
+        """Serve o frontend React se disponível"""
+        try:
+            return send_from_directory(app.static_folder, 'index.html')
+        except:
+            return jsonify({
+                'message': 'Claudia.AI Backend está funcionando!',
+                'version': '1.0.0',
+                'status': 'online',
+                'frontend': 'not_deployed'
+            })
+    
+    @app.route('/api/health')
+    def health_check():
+        """Endpoint de verificação de saúde"""
+        try:
+            # Testar conexão com banco de dados
+            db.session.execute(text('SELECT 1'))
+            db_status = 'healthy'
+        except Exception as e:
+            logger.error(f"Erro no banco de dados: {e}")
+            db_status = 'unhealthy'
+        
+        return jsonify({
+            'status': 'healthy' if db_status == 'healthy' else 'degraded',
+            'timestamp': datetime.utcnow().isoformat(),
+            'database': db_status,
+            'version': '1.0.0',
+            'environment': os.getenv('FLASK_ENV', 'production')
+        })
+    
+    @app.route('/api/info')
+    def app_info():
+        """Informações da aplicação"""
+        return jsonify({
+            'name': 'Claudia.AI Backend',
+            'version': '1.0.0',
+            'description': 'Backend da Claudia.AI - Inteligência Artificial Conversacional',
+            'author': 'Manus AI',
+            'endpoints': {
+                'health': '/api/health',
+                'users': '/api/users',
+                'conversations': '/api/conversations',
+                'ai_generate': '/api/ai/generate',
+                'ai_stream': '/api/ai/stream',
+                'ai_status': '/api/ai/status',
+                'ai_models': '/api/ai/models',
+                'ai_config': '/api/ai/config',
+                'ai_test': '/api/ai/test'
+            },
+            'documentation': {
+                'openapi': '/api/docs',
+                'postman': '/api/postman.json'
+            },
+            'timestamp': datetime.utcnow().isoformat()
+        })
+    
+    @app.errorhandler(404)
+    def not_found(error):
+        """Handler para páginas não encontradas"""
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Endpoint não encontrado'}), 404
+        else:
+            # Tentar servir o frontend para rotas SPA
+            try:
+                return send_from_directory(app.static_folder, 'index.html')
+            except:
+                return jsonify({'error': 'Página não encontrada'}), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        """Handler para erros internos"""
+        logger.error(f"Erro interno: {error}")
+        return jsonify({'error': 'Erro interno do servidor'}), 500
+    
+    # Criar tabelas do banco de dados
+    with app.app_context():
+        try:
+            # Criar diretório do banco se não existir
+            db_dir = os.path.dirname(app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', ''))
+            if db_dir and not os.path.exists(db_dir):
+                os.makedirs(db_dir, exist_ok=True)
+            
+            db.create_all()
+            logger.info("Banco de dados inicializado com sucesso")
+            
+            # Criar usuário padrão se não existir
+            from src.models.user import User
+            if not User.query.first():
+                default_user = User(
+                    username='claudia_user',
+                    email='user@claudia.ai',
+                    preferences={'theme': 'green', 'language': 'pt-BR'}
+                )
+                db.session.add(default_user)
+                db.session.commit()
+                logger.info("Usuário padrão criado")
+                
+        except Exception as e:
+            logger.error(f"Erro ao inicializar banco de dados: {e}")
+    
+    logger.info("Claudia.AI Backend inicializado com sucesso")
+    return app
 
-@app.errorhandler(404)
-def not_found(error):
-    """Handler para 404"""
-    return jsonify({'error': 'Endpoint não encontrado'}), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    """Handler para 500"""
-    logger.error(f"Erro interno: {str(error)}")
-    return jsonify({'error': 'Erro interno do servidor'}), 500
-
-@app.before_request
-def log_request_info():
-    """Log de requisições"""
-    if not request.path.startswith('/static'):
-        logger.info(f"{request.method} {request.path} - {request.remote_addr}")
+def main():
+    """Função principal para executar a aplicação"""
+    app = create_app()
+    
+    # Configurações do servidor
+    host = os.getenv('HOST', '0.0.0.0')
+    port = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    logger.info(f"Iniciando servidor em {host}:{port}")
+    logger.info(f"Debug mode: {debug}")
+    logger.info(f"Environment: {os.getenv('FLASK_ENV', 'production')}")
+    
+    app.run(
+        host=host,
+        port=port,
+        debug=debug,
+        threaded=True
+    )
 
 if __name__ == '__main__':
-    logger.info("Iniciando Claudia.AI Backend...")
-    logger.info("Acesse http://localhost:5000 para a interface")
-    logger.info("API disponível em http://localhost:5000/api")
-    
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    main()
+
